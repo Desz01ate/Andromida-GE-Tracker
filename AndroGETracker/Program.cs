@@ -5,18 +5,49 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace AndroGETracker
 {
     class Program
     {
+        static ConsoleEventDelegate handler;
+
+        private delegate bool ConsoleEventDelegate(int eventType);
+        [DllImport("kernel32.dll", SetLastError = true)]
+        private static extern bool SetConsoleCtrlHandler(ConsoleEventDelegate callback, bool add);
+        [DllImport("user32.dll")]
+        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        [DllImport("kernel32.dll")]
+        static extern IntPtr GetConsoleWindow();
+
+        const int SW_HIDE = 0;
+        const int SW_SHOW = 5;
+
         private static readonly int FAMILY_NAME = 0x7393FE;
         private static readonly int CURRENT_MAP = 0x739395;
         private static readonly int FAMILY_LEVEL = 0x750DEC;
         private static readonly int CURRENT_PLAYING_BGM = 0x6EF2E0;
+        private static System.Timers.Timer procmon;
         static async Task Main(string[] args)
         {
+            var handle = GetConsoleWindow();
+            ShowWindow(handle, SW_HIDE);
+            VerifyIfGameDirectory();
+            StartGame();
+            while (Process.GetProcessesByName("ge").FirstOrDefault() == null)
+            {
+                await Task.Delay(100);
+            }
+            procmon = new System.Timers.Timer
+            {
+                Interval = 300
+            };
+            procmon.Elapsed += Procmon_WatchDog;
+            procmon.Start();
             try
             {
                 handler = new ConsoleEventDelegate(ConsoleEventCallback);
@@ -51,6 +82,34 @@ namespace AndroGETracker
             }
             catch
             {
+                Environment.Exit(0);
+            }
+        }
+
+        private static void StartGame()
+        {
+            var gameStartInfo = new ProcessStartInfo();
+            gameStartInfo.FileName = "Granado Espada.exe";
+            gameStartInfo.CreateNoWindow = true;
+            gameStartInfo.UseShellExecute = false;
+            Process.Start(gameStartInfo);
+        }
+
+        private static void Procmon_WatchDog(object sender, ElapsedEventArgs e)
+        {
+            if (Process.GetProcessesByName("ge").FirstOrDefault() == null)
+            {
+                Environment.Exit(0);
+            }
+        }
+
+        private static void VerifyIfGameDirectory()
+        {
+            var expectedFile = "Granado Espada.exe";
+            if (!File.Exists(expectedFile))
+            {
+                Console.WriteLine("This program must be place with launcher (Granado Espada.exe) in order to run.");
+                Thread.Sleep(3000);
                 Environment.Exit(0);
             }
         }
@@ -117,10 +176,5 @@ namespace AndroGETracker
             }
             return false;
         }
-        static ConsoleEventDelegate handler;   
-
-        private delegate bool ConsoleEventDelegate(int eventType);
-        [DllImport("kernel32.dll", SetLastError = true)]
-        private static extern bool SetConsoleCtrlHandler(ConsoleEventDelegate callback, bool add);
     }
 }
