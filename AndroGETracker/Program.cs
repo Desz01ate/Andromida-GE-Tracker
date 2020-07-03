@@ -68,6 +68,7 @@ namespace AndroGETracker
                     largeImageKey = "gicon",
                 };
                 presence.startTimestamp = ToUtcUnixTime(DateTime.Now);//DateTimeOffset.Now.
+                presence.largeImageText = "https://github.com/Desz01ate/Andromida-GE-Tracker/releases";
                 while (true)
                 {
 
