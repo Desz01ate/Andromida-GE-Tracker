@@ -27,6 +27,7 @@ namespace AndroGETracker
         const int SW_HIDE = 0;
         const int SW_SHOW = 5;
 
+        const string MAP_CONFIG = "map.json";
         private static readonly int FAMILY_NAME = 0x7393FE;
         private static readonly int CURRENT_MAP = 0x739395;
         private static readonly int FAMILY_LEVEL = 0x750DEC;
@@ -38,6 +39,7 @@ namespace AndroGETracker
             ShowWindow(handle, SW_HIDE);
             VerifyIfGameDirectory();
             StartGame();
+            SetupMapFileWatcher();
             while (Process.GetProcessesByName("ge").FirstOrDefault() == null)
             {
                 await Task.Delay(100);
@@ -69,22 +71,48 @@ namespace AndroGETracker
                 };
                 presence.startTimestamp = ToUtcUnixTime(DateTime.Now);//DateTimeOffset.Now.
                 presence.largeImageText = "https://github.com/Desz01ate/Andromida-GE-Tracker/releases";
+                string latestMap = string.Empty;
                 while (true)
                 {
 
                     var familyName = GetFamilyName(vam);
-                    var currentMap = vam.ReadStringASCII((IntPtr)(vam.getBaseAddress + CURRENT_MAP), 255);
-                    currentMap = currentMap.Substring(0, currentMap.IndexOf('\0'));
-                    presence.details = $"{familyName}";
-                    presence.state = $"{GetMapDescription(currentMap)}";
+                    var currentMap = GetCurrentMap(vam);
+                    presence.details = familyName;
+                    presence.state = GetMapDescription(currentMap);
+                    if (latestMap != currentMap)
+                    {
+                        latestMap = currentMap;
+                        presence.startTimestamp = ToUtcUnixTime(DateTime.Now);
+                    }
                     DiscordRPC.UpdatePresence(presence);
                     await Task.Delay(1000);
                 }
             }
-            catch
+            catch //(Exception ex)
             {
                 Environment.Exit(0);
             }
+        }
+
+        private static void SetupMapFileWatcher()
+        {
+            var watcher = new FileSystemWatcher();
+            watcher.NotifyFilter = NotifyFilters.LastWrite;
+            watcher.Path = Directory.GetCurrentDirectory();
+            watcher.Filter = MAP_CONFIG;
+            watcher.Changed += FileChangedConfigHandler;
+            watcher.EnableRaisingEvents = true;
+        }
+
+        private static void FileChangedConfigHandler(object sender, FileSystemEventArgs e)
+        {
+            mapdict = null;
+        }
+
+        private static string GetCurrentMap(VAMemory vam)
+        {
+            var currentMap = vam.ReadStringASCII((IntPtr)(vam.getBaseAddress + CURRENT_MAP), 255);
+            return currentMap.Substring(0, currentMap.IndexOf('\0'));
         }
 
         private static void StartGame()
@@ -146,9 +174,9 @@ namespace AndroGETracker
         {
             if (mapdict == null)
             {
-                if (File.Exists("map.json"))
+                if (File.Exists(MAP_CONFIG))
                 {
-                    mapdict = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText("map.json"));
+                    mapdict = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(MAP_CONFIG));
                 }
                 else
                 {
@@ -173,7 +201,7 @@ namespace AndroGETracker
         {
             if (eventType == 2)
             {
-                File.WriteAllText("map.json", JsonConvert.SerializeObject(mapdict));
+                File.WriteAllText(MAP_CONFIG, JsonConvert.SerializeObject(mapdict));
             }
             return false;
         }
