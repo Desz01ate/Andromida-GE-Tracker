@@ -35,23 +35,24 @@ namespace AndroGETracker
         private static System.Timers.Timer procmon;
         static async Task Main(string[] args)
         {
-            var handle = GetConsoleWindow();
-            ShowWindow(handle, SW_HIDE);
-            VerifyIfGameDirectory();
-            StartGame();
-            SetupMapFileWatcher();
-            while (Process.GetProcessesByName("ge").FirstOrDefault() == null)
-            {
-                await Task.Delay(100);
-            }
-            procmon = new System.Timers.Timer
-            {
-                Interval = 300
-            };
-            procmon.Elapsed += Procmon_WatchDog;
-            procmon.Start();
             try
             {
+                var handle = GetConsoleWindow();
+                ShowWindow(handle, SW_HIDE);
+                VerifyIfGameDirectory();
+                StartGame();
+                SetupMapFileWatcher();
+                while (Process.GetProcessesByName("ge").FirstOrDefault() == null)
+                {
+                    await Task.Delay(100);
+                }
+                procmon = new System.Timers.Timer
+                {
+                    Interval = 300
+                };
+                procmon.Elapsed += Procmon_WatchDog;
+                procmon.Start();
+
                 handler = new ConsoleEventDelegate(ConsoleEventCallback);
                 SetConsoleCtrlHandler(handler, true);
                 Process GameProcess = Process.GetProcessesByName("ge").FirstOrDefault();
@@ -88,10 +89,20 @@ namespace AndroGETracker
                     await Task.Delay(1000);
                 }
             }
-            catch //(Exception ex)
+            catch (Exception ex)
             {
-                Environment.Exit(0);
+                AppendLog(ex);
             }
+        }
+
+        private static void AppendLog(Exception ex)
+        {
+            var logfile = "error.log";
+            if (!File.Exists(logfile))
+            {
+                File.Create(logfile).Close();
+            }
+            File.AppendAllText(logfile, $"[{DateTime.Now}] {ex.ToString()}\n");
         }
 
         private static void SetupMapFileWatcher()
