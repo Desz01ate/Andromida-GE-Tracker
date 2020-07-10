@@ -83,6 +83,7 @@ namespace AndroGETracker
             }
             catch
             {
+                ConsoleEventCallback(2);
                 Environment.Exit(0);
             }
         }
@@ -100,6 +101,7 @@ namespace AndroGETracker
         {
             if (Process.GetProcessesByName("ge").FirstOrDefault() == null)
             {
+                ConsoleEventCallback(2);
                 Environment.Exit(0);
             }
         }
