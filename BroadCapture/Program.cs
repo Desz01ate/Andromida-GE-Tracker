@@ -100,7 +100,7 @@ namespace AndroGETracker
         {
             DiscordClient = new DiscordClient(new DiscordConfiguration()
             {
-                Token = "NzIwMjQyNjU1MTAzMTU2MjM1.Xwgwkw.GfplsgEuCHkqXMnznXUR7Uh7ASY",
+                Token = Config.Instance.DiscordBotToken,
                 TokenType = TokenType.Bot,
                 LogLevel = LogLevel.Info,
                 UseInternalLogHandler = true,

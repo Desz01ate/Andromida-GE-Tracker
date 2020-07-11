@@ -12,6 +12,7 @@ namespace BroadCapture
     {
         public ulong Discord_TextChannel_Id { get; set; }
         public string[] ExcludeMessageFrom { get; set; }
+        public string DiscordBotToken { get; set; }
         public static Config Instance { get; }
         static Config()
         {
