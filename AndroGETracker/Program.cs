@@ -42,10 +42,12 @@ namespace AndroGETracker
                 VerifyIfGameDirectory();
                 StartGame();
                 SetupMapFileWatcher();
+                await ExecutePreCommandAsync();
                 while (Process.GetProcessesByName("ge").FirstOrDefault() == null)
                 {
                     await Task.Delay(100);
                 }
+                var postTask = ExecutePostCommandAsync();
                 procmon = new System.Timers.Timer
                 {
                     Interval = 300
@@ -73,6 +75,7 @@ namespace AndroGETracker
                 presence.startTimestamp = ToUtcUnixTime(DateTime.Now);//DateTimeOffset.Now.
                 presence.largeImageText = "https://github.com/Desz01ate/Andromida-GE-Tracker/releases";
                 string latestMap = string.Empty;
+                await postTask;
                 while (true)
                 {
 
@@ -92,6 +95,23 @@ namespace AndroGETracker
             catch (Exception ex)
             {
                 AppendLog(ex);
+            }
+        }
+
+        private static async Task ExecutePostCommandAsync()
+        {
+            await Task.Delay(1000);
+            foreach (var command in Config.Instance.Commands.Post)
+            {
+                Process.Start(command);
+            }
+        }
+
+        private static async Task ExecutePreCommandAsync()
+        {
+            foreach (var command in Config.Instance.Commands.Pre)
+            {
+                Process.Start(command);
             }
         }
 

@@ -1,5 +1,7 @@
 {
-  "Discord_TextChannel_Id": 0,
+  "Discord_TextChannel_Id": [ 0 ],
   "DiscordBotToken": "",
-  "ExcludeMessageFrom": []
+  "CommandPrefix": "!",
+  "ExcludeMessageFrom": [],
+  "Maintenance": false
 }
