@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BroadCapture
@@ -21,13 +22,29 @@ namespace BroadCapture
         static Config()
         {
             InitInstance();
+            SetupConfigWatcher();
         }
 
         private static void InitInstance()
         {
-            var content = File.ReadAllText(CONFIG_FILE);
-            var inst = JsonConvert.DeserializeObject<Config>(content);
-            Instance = inst;
+            var retries = 0;
+        retry:
+            try
+            {
+                var content = File.ReadAllText(CONFIG_FILE);
+                var inst = JsonConvert.DeserializeObject<Config>(content);
+                Instance = inst;
+            }
+            catch (IOException)
+            {
+                if (retries++ < 10)
+                {
+                    Thread.Sleep(300);
+                    goto retry;
+                }
+                throw;
+            }
+
         }
 
         public Config()
