@@ -9,7 +9,7 @@ namespace BroadCapture.Helpers
 {
     public static class DiscordColorHelpers
     {
-        public static Optional<DiscordColor> GetColorForMessage(AndroGETrackerML.Model.Enum.MessageType type)
+        public static DiscordColor GetColorForMessage(AndroGETrackerML.Model.Enum.MessageType type)
         {
             DiscordColor color;
             switch (type)
@@ -35,7 +35,19 @@ namespace BroadCapture.Helpers
                     color = new DiscordColor(255, 0, 0);
                     break;
             }
-            return new Optional<DiscordColor>(color);
+            return color;
+        }
+        readonly static Random rand = new Random();
+        static byte Random(byte min, byte max)
+        {
+            return (byte)((rand.NextDouble() * (max - min)) + min);
+        }
+        public static DiscordColor GetRandomColor()
+        {
+            var r = Random(0, 255);
+            var g = Random(0, 255);
+            var b = Random(0, 255);
+            return new DiscordColor(r, g, b);
         }
     }
 }

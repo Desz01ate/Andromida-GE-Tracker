@@ -60,6 +60,8 @@ namespace AndroGETracker
                 runner.BroadCaptured += async (broadMessage) =>
                 {
                     var type = AndroGETrackerML.Model.ConsumeModel.Predict(broadMessage);
+                    if (type == AndroGETrackerML.Model.Enum.MessageType.Other && Config.Instance.DisabledOtherMessage)
+                        return;
                     var author = StringHelpers.ExtractCreateBy(broadMessage);
                     await Service.Instance.Message.ManualInsertAsync(broadMessage, (int)type, author);
                     embedMessage.Author = new DiscordEmbedBuilder.EmbedAuthor()
@@ -71,7 +73,7 @@ namespace AndroGETracker
                     embedMessage.Color = DiscordColorHelpers.GetColorForMessage(type);
                     foreach (var channel in discordClientFactory.GetDiscordChannels())
                     {
-                        Queue.Enqueue(CheckReservation(broadMessage, channel));
+                        Queue.Enqueue(CheckReservation(broadMessage, channel, type));
                         discordClientFactory.Client.SendMessageAsync(channel, embed: embedMessage);
                     }
                     shortLiveUidBuffer.Clear();
@@ -117,7 +119,7 @@ namespace AndroGETracker
                 await q;
             }
         }
-        private static async Task CheckReservation(string message, DiscordChannel channel)
+        private static async Task CheckReservation(string message, DiscordChannel channel, AndroGETrackerML.Model.Enum.MessageType messageType)
         {
             var guild = channel.Guild;
             foreach (var reserve in Service.Instance.Reservation)
@@ -133,7 +135,7 @@ namespace AndroGETracker
                     if (member != null && !shortLiveUidBuffer.Contains(reserve.OwnerId))
                     {
                         shortLiveUidBuffer.Add(reserve.OwnerId);
-                        var embed = CommandsHandler.generateNewEmbed(reserve.Keyword, message);
+                        var embed = DiscordEmbedHelpers.GenerateEmbedMessage($"Notification for {reserve.Keyword}", message, "Brought to you by Coalescense with love <3", "https://cdn.discordapp.com/avatars/322051347505479681/87eb411421d1f89dc9f29196ac670862.png?size=64", DiscordColorHelpers.GetColorForMessage(messageType));
                         var dm = await member.CreateDmChannelAsync();
                         await dm.SendMessageAsync(embed: embed);
                     }

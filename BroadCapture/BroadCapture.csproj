@@ -240,6 +240,7 @@
     <Compile Include="Domain\Interface\IBroadCapture.cs" />
     <Compile Include="Extensions\DiscordChannelExtention.cs" />
     <Compile Include="Helpers\DiscordColorHelpers.cs" />
+    <Compile Include="Helpers\DiscordEmbedHelpers.cs" />
     <Compile Include="Helpers\StringHelpers.cs" />
     <Compile Include="Models\BotRequestLog.cs" />
     <Compile Include="Models\ErrorLog.cs" />

@@ -1,6 +1,7 @@
 ﻿using AndroGETrackerML.Model.Enum;
 using BroadCapture;
 using BroadCapture.Extensions;
+using BroadCapture.Helpers;
 using BroadCapture.Models;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
@@ -74,6 +75,16 @@ namespace AndroGETracker
         [Description("Subscribe to specific keyword and notify when related item is showing up in broad.")]
         public async Task Reserve(CommandContext ctx, [RemainingText] string keyword)
         {
+            Action<string> replyAction;
+            if (ctx.Member == null) //currently chatting in DM
+            {
+                replyAction = async (s) => await ctx.RespondAsync(s);
+            }
+            else //chatting via text channel
+            {
+                var dm = await ctx.Member.CreateDmChannelAsync();
+                replyAction = async (s) => await dm.SendMessageAsync(s);
+            }
             await Service.Instance.BotRequestLogs.InsertAsync(new BotRequestLog()
             {
                 Uid = ctx.Message.Author.Id,
@@ -86,22 +97,21 @@ namespace AndroGETracker
             int expireIn = 180;
             if (string.IsNullOrWhiteSpace(keyword))
             {
-                await ctx.RespondAsync("subscribe item keyword must not be empty.");
+                replyAction("subscribe item keyword must not be empty.");
                 return;
             }
             keyword = keyword.ToLower();
-            var dm = await ctx.Member.CreateDmChannelAsync();
-            var isKeywordExist = Service.Instance.Reservation.Any(x => x.OwnerId == ctx.Member.Id && !x.Expired);
+            var isKeywordExist = Service.Instance.Reservation.Any(x => x.OwnerId == id && !x.Expired);
             if (isKeywordExist)
             {
                 if (keyword == "cancel")
                 {
                     Service.Instance.Reservation.Delete(ctx.Member.Id);
-                    await dm.SendMessageAsync("Previous subscription has been cancelled.");
+                    replyAction("Previous subscription has been cancelled.");
                 }
                 else
                 {
-                    await dm.SendMessageAsync($"There is already existing subscription in queue, please cancel it first and try again later.");
+                    replyAction($"There is already existing subscription in queue, please cancel it first and try again later.");
                 }
                 return;
             }
@@ -116,9 +126,7 @@ namespace AndroGETracker
                 CreateDate = DateTime.Now,
                 ExpireInMinute = expireIn
             });
-            await ctx.Channel.SendDisposableMessageAsync($"{ctx.User.Mention} please check your direct message.");
-            await dm.SendMessageAsync($"{keyword} has been registered, subscription will be expires in {expireIn} minutes.");
-            //await ctx.Message.DeleteAsync();
+            replyAction($"{keyword} has been registered, subscription will be expires in {expireIn} minutes.");
         }
         [Command("preference")]
         [Description("Set preferences that is fit for your personal usage.")]
@@ -273,7 +281,11 @@ namespace AndroGETracker
                     };
                 }
                 var now = DateTime.Now;
-                var embed = generateNewEmbed(broadType, stw, range, limit, appendMessage);
+                var embed = DiscordEmbedHelpers.GenerateEmbedMessage($"Result for {broadType} related to {keyword} :",
+                    null,
+                    $"Brought to you by Coalescense with love <3 ({(float)stw.ElapsedMilliseconds / 1000} seconds processed)\nwith {range} days{appendMessage} {limit} messages preset.",
+                    "https://cdn.discordapp.com/avatars/322051347505479681/87eb411421d1f89dc9f29196ac670862.png?size=64",
+                    DiscordColorHelpers.GetRandomColor());
                 foreach (var broad in result)
                 {
                     var prefixTime = string.Empty;
@@ -293,7 +305,11 @@ namespace AndroGETracker
                     if (embed.Fields.Count == 25)
                     {
                         replyAction(embed);
-                        embed = generateNewEmbed(broadType, stw, range, limit, appendMessage);
+                        embed = DiscordEmbedHelpers.GenerateEmbedMessage($"Result for {broadType} related to {keyword} :",
+                                                                         null,
+                                                                         $"Brought to you by Coalescense with love <3 ({(float)stw.ElapsedMilliseconds / 1000} seconds processed)\nwith {range} days{appendMessage} {limit} messages preset.",
+                                                                         "https://cdn.discordapp.com/avatars/322051347505479681/87eb411421d1f89dc9f29196ac670862.png?size=64",
+                                                                         DiscordColorHelpers.GetRandomColor());
                     }
                     embed.AddField($"{prefixTime} by {broad.CreateBy}", broad.Content);
                 }
@@ -303,44 +319,6 @@ namespace AndroGETracker
             {
                 //await ctx.Message.DeleteAsync();
             }
-            DiscordEmbedBuilder generateNewEmbed(string broadType, Stopwatch stw, int range, int limit, string extendMessage = "")
-            {
-                var rnd = new Random();
-                var embed = new DiscordEmbedBuilder();
-                var r = Random(0, 255);
-                var g = Random(0, 255);
-                var b = Random(0, 255);
-                embed.Color = new Optional<DiscordColor>(new DiscordColor(r, g, b));
-                embed.Title = $"Result for {broadType} related to {keyword} :";
-                embed.Footer = new DiscordEmbedBuilder.EmbedFooter()
-                {
-                    Text = $"Brought to you by Coalescense with love <3 ({(float)stw.ElapsedMilliseconds / 1000} seconds processed)\nwith {range} days{extendMessage} {limit} messages preset.",
-                    IconUrl = "https://cdn.discordapp.com/avatars/322051347505479681/87eb411421d1f89dc9f29196ac670862.png?size=64"
-                };
-                return embed;
-            }
-        }
-        public static DiscordEmbedBuilder generateNewEmbed(string subscribeKeyword, string message)
-        {
-            var rnd = new Random();
-            var embed = new DiscordEmbedBuilder();
-            var r = Random(0, 255);
-            var g = Random(0, 255);
-            var b = Random(0, 255);
-            embed.Color = new Optional<DiscordColor>(new DiscordColor(r, g, b));
-            embed.Title = $"Notification for {subscribeKeyword}";
-            embed.Description = message;
-            embed.Footer = new DiscordEmbedBuilder.EmbedFooter()
-            {
-                Text = $"Brought to you by Coalescense with love <3",
-                IconUrl = "https://cdn.discordapp.com/avatars/322051347505479681/87eb411421d1f89dc9f29196ac670862.png?size=64"
-            };
-            return embed;
-        }
-        readonly static Random rand = new Random();
-        static byte Random(byte min, byte max)
-        {
-            return (byte)((rand.NextDouble() * (max - min)) + min);
         }
     }
 }

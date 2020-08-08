@@ -3,5 +3,6 @@
   "DiscordBotToken": "",
   "CommandPrefix": "!",
   "ExcludeMessageFrom": [],
-  "Maintenance": false
+  "Maintenance": false,
+  "DisabledOtherMessage": false
 }
