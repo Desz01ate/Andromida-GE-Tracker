@@ -15,6 +15,7 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using Utilities.Enum;
 
 namespace AndroGETracker
@@ -42,23 +43,23 @@ namespace AndroGETracker
         public static DiscordClient DiscordClient { get; private set; }
         public static CommandsNextExtension Commands { get; private set; }
         private static readonly Queue<Task> Queue = new Queue<Task>();
+        static readonly List<ulong> shortLiveUidBuffer = new List<ulong>();
 
         static async Task Main(string[] args)
         {
             try
             {
-
                 DateTime lastUpdated = DateTime.Now;
                 bool archiveModeActivated = false;
                 handler = new ConsoleEventDelegate(ConsoleEventCallback);
                 SetConsoleCtrlHandler(handler, true);
+                InitBackupSnapshotTask();
                 var task = InitializeDiscordConnector();
-                if (Config.Instance.Maintenance)
+                Process GameProcess = Process.GetProcessesByName("ge").FirstOrDefault();
+                if (Config.Instance.Maintenance || GameProcess == null)
                 {
                     await RunInMaintenanceMode();
                 }
-                Process GameProcess = Process.GetProcessesByName("ge").FirstOrDefault();
-                if (GameProcess == null) Environment.Exit(0);
                 VAMemory vam = new VAMemory("ge");
                 vam.ReadInt32(GameProcess.MainModule.BaseAddress);
                 Task.Run(ActionThread);
@@ -71,43 +72,44 @@ namespace AndroGETracker
                 var embedMessage = new DiscordEmbedBuilder();
                 while (true)
                 {
-                    archiveModeActivated = (lastUpdated.Subtract(DateTime.Now).Minutes >= 10);
-                    if (archiveModeActivated)
+                    //archiveModeActivated = (DateTime.Now.Subtract(lastUpdated).TotalMinutes >= 10);
+                    //if (archiveModeActivated)
+                    //{
+                    //    await Task.Delay(1000);
+                    //    activityObject.Name = $"In Maintenance Mode";
+                    //    await DiscordClient.UpdateStatusAsync(activityObject);
+                    //}
+                    //else
+                    //{
+                    var currentMessage = GetCurrentMessage(vam);
+                    if (latestMessage != currentMessage && VerifyIfBroadMessage(currentMessage))
                     {
-                        await Task.Delay(1000);
-                        activityObject.Name = $"In Maintenance Mode";
-                        await DiscordClient.UpdateStatusAsync(activityObject);
-                    }
-                    else
-                    {
-                        var currentMessage = GetCurrentMessage(vam);
-                        if (latestMessage != currentMessage && VerifyIfBroadMessage(currentMessage))
+                        lastUpdated = DateTime.Now;
+                        var message = $"[{DateTime.Now.AddHours(-7):HH:mm}] {currentMessage}";
+                        var type = AndroGETrackerML.Model.ConsumeModel.Predict(currentMessage);
+                        var author = ExtractCreateBy(currentMessage);
+                        Service.Instance.Message.ManualInsert(currentMessage, (int)type, author);
+                        embedMessage.Author = new DiscordEmbedBuilder.EmbedAuthor()
                         {
-                            lastUpdated = DateTime.Now;
-                            var message = $"[{DateTime.Now.AddHours(-7):HH:mm}] {currentMessage}";
-                            var type = AndroGETrackerML.Model.ConsumeModel.Predict(currentMessage);
-                            var author = ExtractCreateBy(currentMessage);
-                            Service.Instance.Message.ManualInsert(currentMessage, (int)type, author);
-                            embedMessage.Author = new DiscordEmbedBuilder.EmbedAuthor()
+                            Name = $"{author} - {type.ToString()}"
+                        };
+                        embedMessage.Title = currentMessage;
+                        embedMessage.Timestamp = DateTime.Now;
+                        embedMessage.Color = GetColorForMessage(type);
+                        lock (Channels)
+                        {
+                            foreach (var channel in Channels)
                             {
-                                Name = $"{author} - {type.ToString()}"
-                            };
-                            embedMessage.Title = currentMessage;
-                            embedMessage.Timestamp = DateTime.Now;
-                            embedMessage.Color = GetColorForMessage(type);
-                            lock (Channels)
-                            {
-                                foreach (var channel in Channels)
-                                {
-                                    Queue.Enqueue(CheckReservation(message, channel));
-                                    DiscordClient.SendMessageAsync(channel, embed: embedMessage);
-                                }
+                                Queue.Enqueue(CheckReservation(message, channel));
+                                DiscordClient.SendMessageAsync(channel, embed: embedMessage);
                             }
-                            activityObject.Name = $"Reading {Service.Instance.Message.Count():n0} messages now.";
-                            await DiscordClient.UpdateStatusAsync(activityObject);
-                            latestMessage = currentMessage;
+                            shortLiveUidBuffer.Clear();
                         }
+                        activityObject.Name = $"Reading {Service.Instance.Message.Count():n0} messages now.";
+                        await DiscordClient.UpdateStatusAsync(activityObject);
+                        latestMessage = currentMessage;
                     }
+                    //}
                     await Task.Delay(300);
                 }
 
@@ -117,6 +119,12 @@ namespace AndroGETracker
                 Service.Instance.ErrorLog.Insert(new ErrorLog(ex.ToString()));
                 Process.Start("BroadCapture.exe");
             }
+        }
+
+        private static void InitBackupSnapshotTask()
+        {
+            //var timer = new System.Timers.Timer();
+            //timer.Interval = 60 * 60 * 1000;//60 minutes x 60 seconds x 1000 ms
         }
 
         private static async Task RunInMaintenanceMode()
@@ -197,7 +205,6 @@ namespace AndroGETracker
                 await q;
             }
         }
-
         private static async Task CheckReservation(string message, DiscordChannel channel)
         {
             var guild = channel.Guild;
@@ -211,10 +218,12 @@ namespace AndroGETracker
                 if (message.ToLower().Contains(reserve.Keyword))
                 {
                     var member = await guild.GetMemberAsync(reserve.OwnerId);
-                    if (member != null)
+                    if (member != null && !shortLiveUidBuffer.Contains(reserve.OwnerId))
                     {
+                        shortLiveUidBuffer.Add(reserve.OwnerId);
+                        var embed = CommandsHandler.generateNewEmbed(reserve.Keyword, message);
                         var dm = await member.CreateDmChannelAsync();
-                        await dm.SendMessageAsync($"[NOTIFICATION] {message}");
+                        await dm.SendMessageAsync(embed: embed);
                     }
                 }
             }

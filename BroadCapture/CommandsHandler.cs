@@ -162,10 +162,6 @@ namespace AndroGETracker
         }
         private async Task performOperationTask(CommandContext ctx, string keyword, MessageType type)
         {
-            Service.Instance.ErrorLog.Insert(new BroadCapture.Models.ErrorLog()
-            {
-                ErrorDetail = $"{ctx.Message.Author.Username} : {ctx.Message}"
-            });
             var author = ctx.Message.Author;
             var id = author.Id;
             string appendMessage = string.Empty;
@@ -241,7 +237,7 @@ namespace AndroGETracker
                     var copyParam = param.ConvertAll(x => x);
                     range += (retry * 30);
                     copyParam.Add(new RDapter.Entities.DatabaseParameter("date", DateTime.Today.AddDays(-range)));
-                    result = Service.Instance.Connector.ExecuteReader<BroadCapture.Models.Message>(new RDapter.Entities.ExecutionCommand(query, copyParam)).GroupBy(x => x.Content).Select(x => x.First()).AsList();
+                    result = Service.Instance.Connector.ExecuteReader<Message>(new RDapter.Entities.ExecutionCommand(query, copyParam)).GroupBy(x => x.Content).Select(x => x.First()).AsList();
                 } while (result.Count == 0 && retry++ < 2);
                 if (retry == 1)
                 {
@@ -323,7 +319,23 @@ namespace AndroGETracker
                 };
                 return embed;
             }
-
+        }
+        public static DiscordEmbedBuilder generateNewEmbed(string subscribeKeyword, string message)
+        {
+            var rnd = new Random();
+            var embed = new DiscordEmbedBuilder();
+            var r = Random(0, 255);
+            var g = Random(0, 255);
+            var b = Random(0, 255);
+            embed.Color = new Optional<DiscordColor>(new DiscordColor(r, g, b));
+            embed.Title = $"Notification for {subscribeKeyword}";
+            embed.Description = message;
+            embed.Footer = new DiscordEmbedBuilder.EmbedFooter()
+            {
+                Text = $"Brought to you by Coalescense with love <3",
+                IconUrl = "https://cdn.discordapp.com/avatars/322051347505479681/87eb411421d1f89dc9f29196ac670862.png?size=64"
+            };
+            return embed;
         }
         readonly static Random rand = new Random();
         static byte Random(byte min, byte max)
