@@ -3,6 +3,7 @@ using BroadCapture.Models;
 using System;
 using RDapter;
 using AndroGETrackerML.Model.Enum;
+using System.Threading.Tasks;
 
 namespace BroadCapture.Repositories
 {
@@ -11,11 +12,11 @@ namespace BroadCapture.Repositories
     ///</summary>
     public partial class MessageRepository : Repository<Message>
     {
-        public int ManualInsert(string currentMessage, int type, string CreateBy)
+        public Task<int> ManualInsertAsync(string currentMessage, int type, string CreateBy)
         {
             var (isBuy, isSell, isTrade) = ValidateFlagType(type);
             var sql = "INSERT INTO Message(Id,Content,Type,CreateDate,CreateBy,IsBuy,IsSell,IsTrade) VALUES(null,@content,@type,@createDate,@createBy,@isBuy,@isSell,@isTrade)";
-            return this.Connector.ExecuteNonQuery(sql, new
+            return this.Connector.ExecuteNonQueryAsync(sql, new
             {
                 content = currentMessage,
                 type,
