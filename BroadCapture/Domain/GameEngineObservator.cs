@@ -58,21 +58,21 @@ namespace BroadCapture.Domain
                 return true;
             }
             broadMessage = null;
-            return true;
+            return false;
         }
         private static bool verifyIfBroadMessage(string currentMessage)
         {
             var condition1 = currentMessage.Contains("- [") && currentMessage.EndsWith("]");
-            var condition2 = true;
-            foreach (var blockedName in Config.Instance.ExcludeMessageFrom)
-            {
-                if (currentMessage.Contains($"[{blockedName}]"))
-                {
-                    condition2 = false;
-                    break;
-                }
-            }
-            return condition2 && condition1;
+            //var condition2 = true;
+            //foreach (var blockedName in Config.Instance.ExcludeMessageFrom)
+            //{
+            //    if (currentMessage.Contains($"[{blockedName}]"))
+            //    {
+            //        condition2 = false;
+            //        break;
+            //    }
+            //}
+            return condition1;
         }
     }
 }

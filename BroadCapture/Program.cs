@@ -69,19 +69,18 @@ namespace AndroGETracker
                     embedMessage.Title = broadMessage;
                     embedMessage.Timestamp = DateTime.Now;
                     embedMessage.Color = DiscordColorHelpers.GetColorForMessage(type);
-                    lock (discordClientFactory.Channels)
+                    foreach (var channel in discordClientFactory.GetDiscordChannels())
                     {
-                        foreach (var channel in discordClientFactory.Channels)
-                        {
-                            Queue.Enqueue(CheckReservation(broadMessage, channel));
-                            discordClientFactory.Client.SendMessageAsync(channel, embed: embedMessage);
-                        }
-                        shortLiveUidBuffer.Clear();
+                        Queue.Enqueue(CheckReservation(broadMessage, channel));
+                        discordClientFactory.Client.SendMessageAsync(channel, embed: embedMessage);
                     }
+                    shortLiveUidBuffer.Clear();
                     activityObject.Name = $"Reading {Service.Instance.Message.Count():n0} messages now.";
                     await discordClientFactory.Client.UpdateStatusAsync(activityObject);
                     await Task.Delay(300);
                 };
+                await runner.RunAsync(new CancellationTokenSource());
+                await Task.Delay(-1);
             }
             catch (Exception ex)
             {

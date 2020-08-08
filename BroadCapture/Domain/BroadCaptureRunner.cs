@@ -21,7 +21,6 @@ namespace BroadCapture.Domain
         {
             this.gameEngineObservator = new GameEngineObservator();
         }
-
         public async Task RunAsync(CancellationTokenSource cancellationTokenSource)
         {
             while (!cancellationTokenSource.IsCancellationRequested)

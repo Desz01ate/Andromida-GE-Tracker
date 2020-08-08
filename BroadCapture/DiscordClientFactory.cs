@@ -15,11 +15,11 @@ namespace BroadCapture
     public class DiscordClientFactory
     {
         public readonly DiscordClient Client;
-        public readonly List<DiscordChannel> Channels;
+        private readonly List<DiscordChannel> channels;
 
         private DiscordClientFactory()
         {
-            Channels = new List<DiscordChannel>();
+            channels = new List<DiscordChannel>();
             Client = new DiscordClient(new DiscordConfiguration()
             {
                 Token = Config.Instance.DiscordBotToken,
@@ -55,16 +55,16 @@ namespace BroadCapture
             foreach (var channelId in Config.Instance.Discord_TextChannel_Id)
             {
                 var channel = await Client.GetChannelAsync(channelId);
-                Channels.Add(channel);
+                lock (channels) channels.Add(channel);
             }
         }
         private Task DiscordClient_ChannelDeleted(ChannelDeleteEventArgs e)
         {
             var channel = e.Channel;
-            var existingChannel = Channels.SingleOrDefault(x => x.Id == channel.Id);
+            var existingChannel = channels.SingleOrDefault(x => x.Id == channel.Id);
             if (existingChannel != null)
             {
-                Channels.Remove(existingChannel);
+                lock (channels) channels.Remove(existingChannel);
             }
             return Task.CompletedTask;
         }
@@ -72,9 +72,10 @@ namespace BroadCapture
         private Task DiscordClient_ChannelUpdated(ChannelUpdateEventArgs e)
         {
             var channel = e.ChannelAfter;
-            if (channel.Type == ChannelType.Text && channel.Name.Contains("broad") && !Channels.Any(x => x.Id == channel.Id))
+            if (channel.Type == ChannelType.Text && channel.Name.Contains("broad") && !channels.Any(x => x.Id == channel.Id))
             {
-                Channels.Add(channel);
+                lock (channels)
+                    channels.Add(channel);
             }
             return Task.CompletedTask;
         }
@@ -84,7 +85,8 @@ namespace BroadCapture
             var channel = e.Channel;
             if (channel.Type == ChannelType.Text && channel.Name.Contains("broad"))
             {
-                Channels.Add(channel);
+                lock (channels)
+                    channels.Add(channel);
             }
             return Task.CompletedTask;
         }
@@ -92,8 +94,9 @@ namespace BroadCapture
         private Task DiscordClient_GuildDeletedCompleted(GuildDeleteEventArgs e)
         {
             var guild = e.Guild;
-            var channel = Channels.SingleOrDefault(x => x.GuildId == guild.Id);
-            Channels.Remove(channel);
+            var channel = channels.SingleOrDefault(x => x.GuildId == guild.Id);
+            lock (channels)
+                channels.Remove(channel);
             return Task.CompletedTask;
         }
 
@@ -101,11 +104,11 @@ namespace BroadCapture
         {
             var guild = e.Guild;
             var channel = guild.Channels.Where(x => x.Value.Name.Contains("broad")).Select(x => x.Value).FirstOrDefault();
-            if (channel != null && !Channels.Any(x => x.Id == channel.Id))
+            if (channel != null && !channels.Any(x => x.Id == channel.Id))
             {
-                lock (Channels)
+                lock (channels)
                 {
-                    Channels.Add(channel);
+                    lock (channels) channels.Add(channel);
                 }
             }
 
@@ -118,9 +121,10 @@ namespace BroadCapture
             foreach (var guild in guilds)
             {
                 var channel = guild.Value.Channels.Where(x => x.Value.Name.Contains("broad")).Select(x => x.Value).FirstOrDefault();
-                if (channel != null && !Channels.Any(x => x.Id == channel.Id))
+                if (channel != null && !channels.Any(x => x.Id == channel.Id))
                 {
-                    Channels.Add(channel);
+                    lock (channels)
+                        channels.Add(channel);
                 }
             }
             return Task.CompletedTask;
@@ -129,6 +133,16 @@ namespace BroadCapture
         private async Task CommandErrorHandler(CommandErrorEventArgs e)
         {
             Service.Instance.ErrorLog.Insert(new ErrorLog(e.Exception.ToString()));
+        }
+        public IEnumerable<DiscordChannel> GetDiscordChannels()
+        {
+            lock (channels)
+            {
+                foreach (var ch in channels)
+                {
+                    yield return ch;
+                }
+            }
         }
     }
 }
