@@ -22,14 +22,13 @@ namespace BroadCapture
         {
             Connector = new SQLiteConnection($@"Data Source={Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Local.db")};Version=3;");
             ServiceCheckUp();
-            //foreach (var message in Message.Query(true))
-            //{
-            //    message.UpdateFlag();
-
-            //    //var pred = AndroGETrackerML.Model.ConsumeModel.Predict(message.Content);
-            //    //message.Type = (int)pred;
-            //    Connector.Update<Message>(message);
-            //}
+            foreach (var message in Message.Query(true))
+            {
+                var pred = AndroGETrackerML.Model.ConsumeModel.Predict(message.Content);
+                message.Type = (int)pred;
+                message.UpdateFlag();
+                Connector.Update<Message>(message);
+            }
         }
         private MessageRepository _Message { get; set; }
         public MessageRepository Message

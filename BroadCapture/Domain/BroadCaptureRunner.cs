@@ -1,10 +1,6 @@
 ﻿using BroadCapture.Domain.Event;
 using BroadCapture.Domain.Interface;
-using DSharpPlus;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,8 +8,9 @@ namespace BroadCapture.Domain
 {
     public class BroadCaptureRunner : IBroadCapture
     {
-        public event BroadEvent.BroadCapturedEventHandler BroadCaptured;
-        public event BroadEvent.MaintenanceModeActivatedEventHandler MaintenanceModeActivated;
+        public event BroadEvent.BroadCapturedEventHandler OnBroadCaptured;
+        public event BroadEvent.MaintenanceModeActivatedEventHandler OnMaintenanceModeActivated;
+        public event Action<Exception> OnError;
         private readonly GameEngineObservator gameEngineObservator;
         private string latestMessage = string.Empty;
         private DateTime lastUpdate = DateTime.Now;
@@ -21,18 +18,32 @@ namespace BroadCapture.Domain
         {
             this.gameEngineObservator = new GameEngineObservator();
         }
-        public async Task RunAsync(CancellationTokenSource cancellationTokenSource)
+        public async Task RunAsync(CancellationToken cancellationToken)
         {
-            while (!cancellationTokenSource.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested)
             {
-                if (gameEngineObservator.TryReadBroadMessage(out var broadMessage))
+                try
                 {
-                    if (latestMessage != broadMessage)
+                    if (gameEngineObservator.TryReadBroadMessage(out var broadMessage))
                     {
-                        BroadCaptured?.Invoke(broadMessage);
-                        latestMessage = broadMessage;
+                        if (latestMessage != broadMessage)
+                        {
+                            OnBroadCaptured?.Invoke(broadMessage);
+                            latestMessage = broadMessage;
+                            lastUpdate = DateTime.Now;
+                        }
+                    }
+                    if (DateTime.Now.Subtract(lastUpdate).TotalMinutes >= 10)
+                    {
+                        OnMaintenanceModeActivated?.Invoke();
+                        await Task.Delay(1000);
                     }
                 }
+                catch (Exception ex)
+                {
+                    OnError?.Invoke(ex);
+                }
+                await Task.Delay(Config.Instance.Interval);
             }
         }
     }

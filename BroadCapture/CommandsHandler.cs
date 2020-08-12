@@ -19,6 +19,16 @@ namespace AndroGETracker
 {
     public partial class CommandsHandler : BaseCommandModule
     {
+        public override Task BeforeExecutionAsync(CommandContext ctx)
+        {
+            var author = ctx.Message.Author;
+            if (Config.Instance.IsInBlocklisting(author.Id))
+            {
+                ctx.RespondAsync("You're not allowed to use this bot.");
+                throw new Exception($"{author.Username} is forbidden from using the bot.");
+            }
+            return base.BeforeExecutionAsync(ctx);
+        }
         [Command("sell")]
         [Description("search for specific sell from all broads available.")]
         public async Task Sell(CommandContext ctx, [RemainingText] string keyword)
@@ -101,27 +111,20 @@ namespace AndroGETracker
                 return;
             }
             keyword = keyword.ToLower();
-            var isKeywordExist = Service.Instance.Reservation.Any(x => x.OwnerId == id && !x.Expired);
-            if (isKeywordExist)
-            {
-                if (keyword == "cancel")
-                {
-                    Service.Instance.Reservation.Delete(ctx.Member.Id);
-                    replyAction("Previous subscription has been cancelled.");
-                }
-                else
-                {
-                    replyAction($"There is already existing subscription in queue, please cancel it first and try again later.");
-                }
-                return;
-            }
             if (keyword == "cancel")
             {
+                Service.Instance.Reservation.Delete(id);
+                replyAction("Previous subscription has been cancelled.");
                 return;
+                //else
+                //{
+                //    replyAction($"There is already existing subscription in queue, please cancel it first and try again later.");
+                //}
+                //return;
             }
             Service.Instance.Reservation.Insert(new BroadCapture.Models.Reservation()
             {
-                OwnerId = ctx.Member.Id,
+                OwnerId = id,
                 Keyword = keyword,
                 CreateDate = DateTime.Now,
                 ExpireInMinute = expireIn
@@ -199,7 +202,7 @@ namespace AndroGETracker
                         break;
                 }
                 var preference = Service.Instance.Preferences.Query(x => x.UserId == author.Id).FirstOrDefault();
-                var keywords = keyword.Split(',');
+                var keywords = keyword.Split(',').Select(x => x.Trim()).ToArray();
                 var range = preference?.SearchRange ?? 1;
                 var limit = preference?.SearchLimit ?? 10;
                 var param = new List<RDapter.Entities.DatabaseParameter>();

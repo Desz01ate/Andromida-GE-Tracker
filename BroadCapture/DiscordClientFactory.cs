@@ -47,16 +47,7 @@ namespace BroadCapture
         {
             var fac = new DiscordClientFactory();
             await fac.Client.ConnectAsync();
-            await fac.InitTextChannels();
             return fac;
-        }
-        private async Task InitTextChannels()
-        {
-            foreach (var channelId in Config.Instance.Discord_TextChannel_Id)
-            {
-                var channel = await Client.GetChannelAsync(channelId);
-                lock (channels) channels.Add(channel);
-            }
         }
         private Task DiscordClient_ChannelDeleted(ChannelDeleteEventArgs e)
         {

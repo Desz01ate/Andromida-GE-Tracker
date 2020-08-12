@@ -44,6 +44,7 @@ namespace AndroGETracker
 
         static async Task Main(string[] args)
         {
+            var cancellationTokenSource = new CancellationTokenSource();
             try
             {
                 handler = new ConsoleEventDelegate(ConsoleEventCallback);
@@ -57,35 +58,55 @@ namespace AndroGETracker
 
                 var discordClientFactory = await DiscordClientFactory.CreateAsync();
                 var runner = new BroadCaptureRunner();
-                runner.BroadCaptured += async (broadMessage) =>
+                runner.OnBroadCaptured += async (broadMessage) =>
                 {
-                    var type = AndroGETrackerML.Model.ConsumeModel.Predict(broadMessage);
-                    if (type == AndroGETrackerML.Model.Enum.MessageType.Other && Config.Instance.DisabledOtherMessage)
-                        return;
-                    var author = StringHelpers.ExtractCreateBy(broadMessage);
-                    await Service.Instance.Message.ManualInsertAsync(broadMessage, (int)type, author);
-                    embedMessage.Author = new DiscordEmbedBuilder.EmbedAuthor()
+                    try
                     {
-                        Name = $"{author} - {type.ToString()}"
-                    };
-                    embedMessage.Title = broadMessage;
-                    embedMessage.Timestamp = DateTime.Now;
-                    embedMessage.Color = DiscordColorHelpers.GetColorForMessage(type);
-                    foreach (var channel in discordClientFactory.GetDiscordChannels())
-                    {
-                        Queue.Enqueue(CheckReservation(broadMessage, channel, type));
-                        discordClientFactory.Client.SendMessageAsync(channel, embed: embedMessage);
+                        var type = AndroGETrackerML.Model.ConsumeModel.Predict(broadMessage);
+                        if (type == AndroGETrackerML.Model.Enum.MessageType.Other && Config.Instance.DisabledOtherMessage)
+                            return;
+                        var author = StringHelpers.ExtractCreateBy(broadMessage);
+                        await Service.Instance.Message.ManualInsertAsync(broadMessage, (int)type, author);
+                        embedMessage.Author = new DiscordEmbedBuilder.EmbedAuthor()
+                        {
+                            Name = $"{author} - {type.ToString()}"
+                        };
+                        embedMessage.Title = broadMessage;
+                        embedMessage.Timestamp = DateTime.Now;
+                        embedMessage.Color = DiscordColorHelpers.GetColorForMessage(type);
+                        foreach (var channel in discordClientFactory.GetDiscordChannels())
+                        {
+                            Queue.Enqueue(CheckReservation(broadMessage, channel, type));
+                            discordClientFactory.Client.SendMessageAsync(channel, embed: embedMessage);
+                        }
+                        shortLiveUidBuffer.Clear();
+                        activityObject.Name = $"Reading {Service.Instance.Message.Count():n0} messages now.";
+                        await discordClientFactory.Client.UpdateStatusAsync(activityObject);
                     }
-                    shortLiveUidBuffer.Clear();
-                    activityObject.Name = $"Reading {Service.Instance.Message.Count():n0} messages now.";
-                    await discordClientFactory.Client.UpdateStatusAsync(activityObject);
-                    await Task.Delay(300);
+                    catch (Exception ex)
+                    {
+                        Service.Instance.ErrorLog.Insert(new ErrorLog(ex.ToString()));
+                    }
                 };
-                await runner.RunAsync(new CancellationTokenSource());
+                runner.OnMaintenanceModeActivated += async () =>
+                {
+                    try
+                    {
+                        activityObject.Name = "Maintenance Mode Activated";
+                        await discordClientFactory.Client.UpdateStatusAsync(activityObject);
+                    }
+                    catch (Exception ex)
+                    {
+                        Service.Instance.ErrorLog.Insert(new ErrorLog(ex.ToString()));
+
+                    }
+                };
+                await runner.RunAsync(cancellationTokenSource.Token);
                 await Task.Delay(-1);
             }
             catch (Exception ex)
             {
+                cancellationTokenSource.Cancel();
                 Service.Instance.ErrorLog.Insert(new ErrorLog(ex.ToString()));
                 Process.Start("BroadCapture.exe");
             }

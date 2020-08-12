@@ -7,14 +7,13 @@ using System.Linq;
 using Microsoft.ML;
 using Microsoft.ML.Data;
 using AndroGETrackerML.Model;
-using Microsoft.ML.Trainers.LightGbm;
 
 namespace AndroGETrackerML.ConsoleApp
 {
     public static class ModelBuilder
     {
-        private static string TRAIN_DATA_FILEPATH = @"C:\Users\Exception\source\repos\Playground\Playground\bin\Debug\netcoreapp3.1\dataset.csv";
-        private static string MODEL_FILEPATH = @"C:\Users\Exception\AppData\Local\Temp\MLVSTools\AndroGETrackerML\AndroGETrackerML.Model\MLModel.zip";
+        private static string TRAIN_DATA_FILEPATH = @"D:\Documents\repos\Playground\Playground\bin\Debug\netcoreapp3.1\dataset.csv";
+        private static string MODEL_FILEPATH = @"C:\Users\kunvu\AppData\Local\Temp\MLVSTools\AndroGETrackerML\AndroGETrackerML.Model\MLModel.zip";
         // Create MLContext to be shared across the model creation workflow objects 
         // Set a random seed for repeatable/deterministic results across multiple trainings.
         private static MLContext mlContext = new MLContext(seed: 1);
@@ -32,11 +31,11 @@ namespace AndroGETrackerML.ConsoleApp
             // Build training pipeline
             IEstimator<ITransformer> trainingPipeline = BuildTrainingPipeline(mlContext);
 
-            // Evaluate quality of Model
-            Evaluate(mlContext, trainingDataView, trainingPipeline);
-
             // Train Model
             ITransformer mlModel = TrainModel(mlContext, trainingDataView, trainingPipeline);
+
+            // Evaluate quality of Model
+            Evaluate(mlContext, trainingDataView, trainingPipeline);
 
             // Save model
             SaveModel(mlContext, mlModel, MODEL_FILEPATH, trainingDataView.Schema);
@@ -49,7 +48,7 @@ namespace AndroGETrackerML.ConsoleApp
                                       .Append(mlContext.Transforms.Text.FeaturizeText("Content_tf", "Content"))
                                       .Append(mlContext.Transforms.CopyColumns("Features", "Content_tf"));
             // Set the training algorithm 
-            var trainer = mlContext.MulticlassClassification.Trainers.LightGbm(new LightGbmMulticlassTrainer.Options() { NumberOfIterations = 200, LearningRate = 0.05457525f, NumberOfLeaves = 29, MinimumExampleCountPerLeaf = 1, UseCategoricalSplit = true, HandleMissingValue = false, MinimumExampleCountPerGroup = 10, MaximumCategoricalSplitPointCount = 16, CategoricalSmoothing = 20, L2CategoricalRegularization = 1, UseSoftmax = false, Booster = new GradientBooster.Options() { L2Regularization = 0.5, L1Regularization = 0 }, LabelColumnName = "Type", FeatureColumnName = "Features" })
+            var trainer = mlContext.MulticlassClassification.Trainers.LightGbm(labelColumnName: "Type", featureColumnName: "Features")
                                       .Append(mlContext.Transforms.Conversion.MapKeyToValue("PredictedLabel", "PredictedLabel"));
 
             var trainingPipeline = dataProcessPipeline.Append(trainer);

@@ -12,19 +12,22 @@ namespace BroadCapture
     public class Config
     {
         private const string CONFIG_FILE = "broadconfig.json";
-        public List<ulong> Discord_TextChannel_Id { get; set; }
-        public string[] ExcludeMessageFrom { get; set; }
         public string DiscordBotToken { get; set; }
         public string CommandPrefix { get; set; }
         public static Config Instance { get; private set; }
         public bool Maintenance { get; set; }
         public bool DisabledOtherMessage { get; set; }
+        public ulong[] Blocklisting { get; set; }
+        public int Interval { get; set; }
         static Config()
         {
             InitInstance();
             SetupConfigWatcher();
         }
-
+        public bool IsInBlocklisting(ulong uid)
+        {
+            return Blocklisting.Contains(uid);
+        }
         private static void InitInstance()
         {
             var retries = 0;

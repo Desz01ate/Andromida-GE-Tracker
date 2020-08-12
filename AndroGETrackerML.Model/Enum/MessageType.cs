@@ -11,6 +11,7 @@ namespace AndroGETrackerML.Model.Enum
         Trade = 3,
         BuyAndSell = 4,
         SellOrTrade = 5,
+        LookingForMember = 6,
         Other = -1
     }
 }

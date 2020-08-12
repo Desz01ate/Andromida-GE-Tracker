@@ -9,8 +9,8 @@ namespace BroadCapture.Domain.Interface
 {
     public interface IBroadCapture
     {
-        event Event.BroadEvent.BroadCapturedEventHandler BroadCaptured;
-        event Event.BroadEvent.MaintenanceModeActivatedEventHandler MaintenanceModeActivated;
-        Task RunAsync(CancellationTokenSource cancellationTokenSource = null);
+        event Event.BroadEvent.BroadCapturedEventHandler OnBroadCaptured;
+        event Event.BroadEvent.MaintenanceModeActivatedEventHandler OnMaintenanceModeActivated;
+        Task RunAsync(CancellationToken cancellationToken);
     }
 }

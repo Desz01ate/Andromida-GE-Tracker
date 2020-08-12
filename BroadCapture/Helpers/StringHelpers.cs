@@ -12,7 +12,7 @@ namespace BroadCapture.Helpers
         public static string ExtractCreateBy(string message)
         {
             var group = Regex.Match(message, @"(- \[.*?\])", RegexOptions.Compiled);
-            var writer = Regex.Replace(group.Value, @"[-\[\]]", "", RegexOptions.Compiled);
+            var writer = Regex.Replace(group.Value.TrimStart('-', ' '), @"[\[\]]", "", RegexOptions.Compiled);
             return writer;
         }
     }

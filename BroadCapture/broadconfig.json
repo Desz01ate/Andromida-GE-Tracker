@@ -1,8 +1,8 @@
 {
-  "Discord_TextChannel_Id": [ 0 ],
   "DiscordBotToken": "",
   "CommandPrefix": "!",
-  "ExcludeMessageFrom": [],
+  "Interval": 50,
   "Maintenance": false,
-  "DisabledOtherMessage": false
+  "DisabledOtherMessage": false,
+  "Blocklisting": []
 }

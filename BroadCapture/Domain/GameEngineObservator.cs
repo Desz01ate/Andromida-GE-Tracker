@@ -11,8 +11,13 @@ namespace BroadCapture.Domain
     public class GameEngineObservator
     {
         private static readonly int CURRENT_GAME_MESSAGE = 0x727C40;
-        private readonly VAMemory vam;
+        private VAMemory vam;
         public GameEngineObservator()
+        {
+            InitVAMemory();
+        }
+
+        private void InitVAMemory()
         {
             var gameProcess = Process.GetProcessesByName("ge").FirstOrDefault();
             if (gameProcess == null)
@@ -20,6 +25,7 @@ namespace BroadCapture.Domain
             vam = new VAMemory("ge");
             vam.ReadInt32(gameProcess.MainModule.BaseAddress);
         }
+
         public string ReadMessage()
         {
             var currentMsg = vam.ReadStringASCII((IntPtr)(vam.getBaseAddress + CURRENT_GAME_MESSAGE), 255);
@@ -51,11 +57,21 @@ namespace BroadCapture.Domain
         }
         public bool TryReadBroadMessage(out string broadMessage)
         {
-            var message = ReadMessage();
-            if (verifyIfBroadMessage(message))
+            try
             {
-                broadMessage = message;
-                return true;
+                var message = ReadMessage();
+                if (verifyIfBroadMessage(message))
+                {
+                    broadMessage = message;
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message == "Only part of a ReadProcessMemory or WriteProcessMemory request was completed" || ex.Message == "Object reference not set to an instance of an object.")
+                {
+                    InitVAMemory();
+                }
             }
             broadMessage = null;
             return false;

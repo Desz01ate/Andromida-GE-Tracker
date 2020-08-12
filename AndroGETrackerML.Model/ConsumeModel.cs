@@ -36,7 +36,8 @@ namespace AndroGETrackerML.Model
             {
                 Content = cleanMessage
             });
-            return (MessageType)result.Prediction;
+            var res = int.Parse(result.Prediction);
+            return (MessageType)res;
         }
     }
 }

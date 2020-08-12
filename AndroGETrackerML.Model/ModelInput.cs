@@ -11,7 +11,7 @@ namespace AndroGETrackerML.Model
 
 
         [ColumnName("Type"), LoadColumn(1)]
-        public float Type { get; set; }
+        public string Type { get; set; }
 
 
         [ColumnName("CreateDate"), LoadColumn(2)]
