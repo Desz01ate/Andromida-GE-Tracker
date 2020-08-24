@@ -81,6 +81,19 @@ namespace AndroGETracker
             });
             await performOperationTask(ctx, keyword, MessageType.Other);
         }
+        [Command("raid")]
+        [Description("search for raid party from broads.")]
+        public async Task Raid(CommandContext ctx, [RemainingText] string raidName)
+        {
+            await Service.Instance.BotRequestLogs.InsertAsync(new BotRequestLog()
+            {
+                uid = (long)ctx.Message.Author.Id,
+                username = ctx.Message.Author.Username,
+                commandtype = "RAID",
+                fullcommand = $"!raid {raidName}"
+            });
+            await performOperationTask(ctx, raidName, MessageType.LookingForMember);
+        }
         [Command("subscribe")]
         [Description("Subscribe to specific keyword and notify when related item is showing up in broad.")]
         public async Task Reserve(CommandContext ctx, [RemainingText] string keyword)

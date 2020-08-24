@@ -24,6 +24,7 @@ namespace BroadCapture.Repositories
         public MessageRepository(Service service) : base(service.Connector)
         {
             this.Service = service;
+            this.TotalMessages = this.Count();
         }
         public override void Insert(Message data)
         {
