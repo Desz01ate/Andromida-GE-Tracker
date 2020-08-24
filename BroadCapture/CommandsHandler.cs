@@ -287,7 +287,7 @@ namespace AndroGETracker
                 var embed = DiscordEmbedHelpers.GenerateEmbedMessage($"Result for {broadType} related to {keyword} :",
                     null,
                     $"Brought to you by Coalescense with love <3 ({(float)stw.ElapsedMilliseconds / 1000} seconds processed)\nwith {range} days{appendMessage} {limit} messages preset.",
-                    "https://cdn.discordapp.com/avatars/322051347505479681/87eb411421d1f89dc9f29196ac670862.png?size=64",
+                    (await ctx.Client.GetOwnerAsync()).AvatarUrl,
                     DiscordColorHelpers.GetRandomColor());
                 foreach (var broad in result)
                 {
@@ -311,7 +311,7 @@ namespace AndroGETracker
                         embed = DiscordEmbedHelpers.GenerateEmbedMessage($"Result for {broadType} related to {keyword} :",
                                                                          null,
                                                                          $"Brought to you by Coalescense with love <3 ({(float)stw.ElapsedMilliseconds / 1000} seconds processed)\nwith {range} days{appendMessage} {limit} messages preset.",
-                                                                         "https://cdn.discordapp.com/avatars/322051347505479681/87eb411421d1f89dc9f29196ac670862.png?size=64",
+                                                                         (await ctx.Client.GetOwnerAsync()).AvatarUrl,
                                                                          DiscordColorHelpers.GetRandomColor());
                     }
                     embed.AddField($"{prefixTime} by {broad.CreateBy}", broad.Content);

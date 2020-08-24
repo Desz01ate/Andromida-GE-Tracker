@@ -1,5 +1,6 @@
 ﻿using BroadCapture;
 using BroadCapture.Domain;
+using BroadCapture.Extensions;
 using BroadCapture.Helpers;
 using BroadCapture.Models;
 using DSharpPlus;
@@ -41,7 +42,7 @@ namespace AndroGETracker
         #endregion
         private static readonly Queue<Task> Queue = new Queue<Task>();
         static readonly List<ulong> shortLiveUidBuffer = new List<ulong>();
-
+        static DiscordClientFactory discordClientFactory;
         static async Task Main(string[] args)
         {
             var cancellationTokenSource = new CancellationTokenSource();
@@ -56,7 +57,7 @@ namespace AndroGETracker
                 var activityObject = new DiscordActivity();
                 var embedMessage = new DiscordEmbedBuilder();
 
-                var discordClientFactory = await DiscordClientFactory.CreateAsync();
+                discordClientFactory = await DiscordClientFactory.CreateAsync();
                 var runner = new BroadCaptureRunner();
                 runner.OnBroadCaptured += async (broadMessage) =>
                 {
@@ -156,7 +157,7 @@ namespace AndroGETracker
                     if (member != null && !shortLiveUidBuffer.Contains(reserve.OwnerId))
                     {
                         shortLiveUidBuffer.Add(reserve.OwnerId);
-                        var embed = DiscordEmbedHelpers.GenerateEmbedMessage($"Notification for {reserve.Keyword}", message, "Brought to you by Coalescense with love <3", "https://cdn.discordapp.com/avatars/322051347505479681/87eb411421d1f89dc9f29196ac670862.png?size=64", DiscordColorHelpers.GetColorForMessage(messageType));
+                        var embed = DiscordEmbedHelpers.GenerateEmbedMessage($"Notification for {reserve.Keyword}", message, "Brought to you by Coalescense with love <3", (await discordClientFactory.Client.GetOwnerAsync()).AvatarUrl, DiscordColorHelpers.GetColorForMessage(messageType));
                         var dm = await member.CreateDmChannelAsync();
                         await dm.SendMessageAsync(embed: embed);
                     }
