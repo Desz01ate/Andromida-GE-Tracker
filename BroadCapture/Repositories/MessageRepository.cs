@@ -8,18 +8,51 @@
 // ------------------------------------------------------------------------------
 using BroadCapture.Repositories.Based;
 using BroadCapture.Models;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
+
 namespace BroadCapture.Repositories
 {
-	///<summary>
-	/// Data contractor for Message
-	///</summary>
-	public partial class MessageRepository : Repository<Message>
-	{
-		private readonly Service Service;
-		public MessageRepository(Service service) : base(service.Connector)
-		{
-			this.Service = service;
-		}
-	}
+    ///<summary>
+    /// Data contractor for Message
+    ///</summary>
+    public partial class MessageRepository : Repository<Message>
+    {
+        private int TotalMessages = -1;
+        private readonly Service Service;
+        public MessageRepository(Service service) : base(service.Connector)
+        {
+            this.Service = service;
+        }
+        public override void Insert(Message data)
+        {
+            TotalMessages += 1;
+            base.Insert(data);
+        }
+        public override Task InsertAsync(Message data)
+        {
+            TotalMessages += 1;
+            return base.InsertAsync(data);
+        }
+        public override void InsertMany(IEnumerable<Message> data)
+        {
+            TotalMessages += data.Count();
+            base.InsertMany(data);
+        }
+        public override Task InsertManyAsync(IEnumerable<Message> data)
+        {
+            TotalMessages += data.Count();
+            return base.InsertManyAsync(data);
+        }
+        public override int Count()
+        {
+            if (TotalMessages == -1)
+            {
+                TotalMessages = base.Count();
+            }
+            return TotalMessages;
+        }
+    }
 }
 

@@ -6,29 +6,24 @@ using BroadCapture.Repositories.Based;
 using BroadCapture.Models;
 using RDapter.Extends;
 using System.Linq;
+using Npgsql;
 
 namespace BroadCapture
 {
     public partial class Service : IDisposable
     {
-        internal protected readonly SQLiteConnection Connector;
+        internal protected readonly NpgsqlConnection Connector;
         public static Service Instance { get; } = new Service();
         public Service(string connectionString)
         {
-            Connector = new SQLiteConnection(connectionString);
+            Connector = new NpgsqlConnection(connectionString);
             ServiceCheckUp();
         }
         public Service()
         {
-            Connector = new SQLiteConnection($@"Data Source={Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Local.db")};Version=3;");
+            Connector = new NpgsqlConnection("Server=arjuna.db.elephantsql.com;Database=wxhsmfts;User ID=wxhsmfts;Password=sVdPIcZo15cGD3W48SoayAyFNxazjMFp;Port=5432;");
+            //Connector = new SQLiteConnection($@"Data Source={Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Local.db")};Version=3;");
             ServiceCheckUp();
-            foreach (var message in Message.Query(true))
-            {
-                var pred = AndroGETrackerML.Model.ConsumeModel.Predict(message.Content);
-                message.Type = (int)pred;
-                message.UpdateFlag();
-                Connector.Update<Message>(message);
-            }
         }
         private MessageRepository _Message { get; set; }
         public MessageRepository Message

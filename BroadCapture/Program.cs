@@ -144,20 +144,20 @@ namespace AndroGETracker
         private static async Task CheckReservation(string message, DiscordChannel channel, AndroGETrackerML.Model.Enum.MessageType messageType)
         {
             var guild = channel.Guild;
-            foreach (var reserve in Service.Instance.Reservation)
+            foreach (var reserve in Service.Instance.Reservation.ToList())
             {
-                if (reserve.Expired)
+                if (reserve.expired)
                 {
                     await Service.Instance.Reservation.DeleteAsync(reserve);
                     continue;
                 }
-                if (message.ToLower().Contains(reserve.Keyword))
+                if (message.ToLower().Contains(reserve.keyword))
                 {
-                    var member = await guild.GetMemberAsync(reserve.OwnerId);
-                    if (member != null && !shortLiveUidBuffer.Contains(reserve.OwnerId))
+                    var member = await guild.GetMemberAsync((ulong)reserve.ownerid);
+                    if (member != null && !shortLiveUidBuffer.Contains((ulong)reserve.ownerid))
                     {
-                        shortLiveUidBuffer.Add(reserve.OwnerId);
-                        var embed = DiscordEmbedHelpers.GenerateEmbedMessage($"Notification for {reserve.Keyword}", message, "Brought to you by Coalescense with love <3", (await discordClientFactory.Client.GetOwnerAsync()).AvatarUrl, DiscordColorHelpers.GetColorForMessage(messageType));
+                        shortLiveUidBuffer.Add((ulong)reserve.ownerid);
+                        var embed = DiscordEmbedHelpers.GenerateEmbedMessage($"Notification for {reserve.keyword}", message, "Brought to you by Coalescense with love <3", (await discordClientFactory.Client.GetOwnerAsync()).AvatarUrl, DiscordColorHelpers.GetColorForMessage(messageType));
                         var dm = await member.CreateDmChannelAsync();
                         await dm.SendMessageAsync(embed: embed);
                     }

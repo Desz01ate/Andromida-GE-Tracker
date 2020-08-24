@@ -6,25 +6,25 @@ namespace BroadCapture.Models
     {
         internal void UpdateFlag()
         {
-            if (!this.Type.HasValue) return;
-            switch ((MessageType)this.Type)
+            if (!this.type.HasValue) return;
+            switch ((MessageType)this.type)
             {
                 case MessageType.Buy:
-                    this.IsBuy = true;
+                    this.isbuy = true;
                     break;
                 case MessageType.Sell:
-                    this.IsSell = true;
+                    this.issell = true;
                     break;
                 case MessageType.Trade:
-                    this.IsTrade = true;
+                    this.istrade = true;
                     break;
                 case MessageType.BuyAndSell:
-                    this.IsBuy = true;
-                    this.IsSell = true;
+                    this.isbuy = true;
+                    this.issell = true;
                     break;
                 case MessageType.SellOrTrade:
-                    this.IsSell = true;
-                    this.IsTrade = true;
+                    this.issell = true;
+                    this.istrade = true;
                     break;
                 default:
                     return;

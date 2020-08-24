@@ -8,10 +8,10 @@ namespace BroadCapture.Models
 {
     public partial class Reservation
     {
-        public ulong OwnerId { get; set; }
-        public string Keyword { get; set; }
-        public DateTime CreateDate { get; set; }
-        public bool Expired => !(DateTime.Now <= CreateDate.AddMinutes(ExpireInMinute));
-        public int ExpireInMinute { get; set; }
+        public long ownerid { get; set; }
+        public string keyword { get; set; }
+        public DateTime createdate { get; set; }
+        public bool expired => !(DateTime.Now <= createdate.AddMinutes(expireinminute));
+        public int expireinminute { get; set; }
     }
 }

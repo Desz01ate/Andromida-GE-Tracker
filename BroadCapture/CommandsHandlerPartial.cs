@@ -21,7 +21,7 @@ namespace AndroGETracker
 {
     public partial class CommandsHandler : BaseCommandModule
     {
-        [Command("stat")]
+        //[Command("stat")]
         public async Task GetStatAsync(CommandContext ctx)
         {
             var generalQuery = @"SELECT
@@ -42,7 +42,7 @@ namespace AndroGETracker
             var topBroader = (await Service.Instance.Connector.ExecuteReaderAsync(topBroaderQuery)).First();
             var responseEmbed = new DiscordEmbedBuilder()
             {
-                Title = $"Statistics for broad bot since {Service.Instance.Message.Min(x => x.CreateDate).Value.ToString("MMMM, dd yyyy")}",
+                Title = $"Statistics for broad bot since {Service.Instance.Message.Min(x => x.createdate).Value.ToString("MMMM, dd yyyy")}",
             };
             responseEmbed.AddField("Total Messages : ", $"{Utilities.String.NumberFormat((int)generalData.TOTAL_MESSAGES, FormatSpecifier.General)} messages.");
             responseEmbed.AddField("Days since first introduce : ", $"{generalData.TOTAL_ACTIVE_DAY} days.");

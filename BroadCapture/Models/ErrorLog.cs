@@ -8,16 +8,16 @@ namespace BroadCapture.Models
 {
     public class ErrorLog
     {
-        public string ErrorDetail { get; set; }
-        public DateTime CreateDate { get; set; }
+        public string errordetail { get; set; }
+        public DateTime createdate { get; set; }
         public ErrorLog()
         {
-            CreateDate = DateTime.Now;
+            createdate = DateTime.Now;
         }
         public ErrorLog(string message)
         {
-            ErrorDetail = message;
-            CreateDate = DateTime.Now;
+            errordetail = message;
+            createdate = DateTime.Now;
         }
     }
 }

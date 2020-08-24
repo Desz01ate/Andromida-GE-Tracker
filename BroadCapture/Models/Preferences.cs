@@ -8,8 +8,8 @@ namespace BroadCapture.Models
 {
     public class Preferences
     {
-        public ulong UserId { get; set; }
-        public int? SearchRange { get; set; }
-        public int? SearchLimit { get; set; }
+        public long userid { get; set; }
+        public int? searchrange { get; set; }
+        public int? searchlimit { get; set; }
     }
 }

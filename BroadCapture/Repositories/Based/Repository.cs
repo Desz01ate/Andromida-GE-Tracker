@@ -189,7 +189,7 @@ namespace BroadCapture.Repositories.Based
         /// Returns rows count from repository.
         /// </summary>
         /// <returns></returns>
-        public int Count()
+        public virtual int Count()
         {
             return this.Connector.Count<T>();
         }

@@ -35,10 +35,10 @@ namespace AndroGETracker
         {
             await Service.Instance.BotRequestLogs.InsertAsync(new BotRequestLog()
             {
-                Uid = ctx.Message.Author.Id,
-                Username = ctx.Message.Author.Username,
-                CommandType = "SELL",
-                FullCommand = $"!sell {keyword}"
+                uid = (long)ctx.Message.Author.Id,
+                username = ctx.Message.Author.Username,
+                commandtype = "SELL",
+                fullcommand = $"!sell {keyword}"
             });
             await performOperationTask(ctx, keyword, MessageType.Sell);
         }
@@ -48,10 +48,10 @@ namespace AndroGETracker
         {
             await Service.Instance.BotRequestLogs.InsertAsync(new BotRequestLog()
             {
-                Uid = ctx.Message.Author.Id,
-                Username = ctx.Message.Author.Username,
-                CommandType = "BUY",
-                FullCommand = $"!buy {keyword}"
+                uid = (long)ctx.Message.Author.Id,
+                username = ctx.Message.Author.Username,
+                commandtype = "BUY",
+                fullcommand = $"!buy {keyword}"
             });
             await performOperationTask(ctx, keyword, MessageType.Buy);
         }
@@ -61,10 +61,10 @@ namespace AndroGETracker
         {
             await Service.Instance.BotRequestLogs.InsertAsync(new BotRequestLog()
             {
-                Uid = ctx.Message.Author.Id,
-                Username = ctx.Message.Author.Username,
-                CommandType = "TRADE",
-                FullCommand = $"!trade {keyword}"
+                uid = (long)ctx.Message.Author.Id,
+                username = ctx.Message.Author.Username,
+                commandtype = "TRADE",
+                fullcommand = $"!trade {keyword}"
             });
             await performOperationTask(ctx, keyword, MessageType.Trade);
         }
@@ -74,10 +74,10 @@ namespace AndroGETracker
         {
             await Service.Instance.BotRequestLogs.InsertAsync(new BotRequestLog()
             {
-                Uid = ctx.Message.Author.Id,
-                Username = ctx.Message.Author.Username,
-                CommandType = "SEARCH",
-                FullCommand = $"!search {keyword}"
+                uid = (long)ctx.Message.Author.Id,
+                username = ctx.Message.Author.Username,
+                commandtype = "SEARCH",
+                fullcommand = $"!search {keyword}"
             });
             await performOperationTask(ctx, keyword, MessageType.Other);
         }
@@ -97,10 +97,10 @@ namespace AndroGETracker
             }
             await Service.Instance.BotRequestLogs.InsertAsync(new BotRequestLog()
             {
-                Uid = ctx.Message.Author.Id,
-                Username = ctx.Message.Author.Username,
-                CommandType = "SUBSCRIBE",
-                FullCommand = $"!subscribe {keyword}"
+                uid = (long)ctx.Message.Author.Id,
+                username = ctx.Message.Author.Username,
+                commandtype = "SUBSCRIBE",
+                fullcommand = $"!subscribe {keyword}"
             });
             var author = ctx.Message.Author;
             var id = author.Id;
@@ -124,43 +124,45 @@ namespace AndroGETracker
             }
             Service.Instance.Reservation.Insert(new BroadCapture.Models.Reservation()
             {
-                OwnerId = id,
-                Keyword = keyword,
-                CreateDate = DateTime.Now,
-                ExpireInMinute = expireIn
+                ownerid = (long)id,
+                keyword = keyword,
+                createdate = DateTime.Now,
+                expireinminute = expireIn
             });
             replyAction($"{keyword} has been registered, subscription will be expires in {expireIn} minutes.");
         }
         [Command("preference")]
         [Description("Set preferences that is fit for your personal usage.")]
-        public async Task Preferences(CommandContext ctx, string key, string value)
+        public async Task Preferences(CommandContext ctx, string key = null, string value = null)
         {
             await Service.Instance.BotRequestLogs.InsertAsync(new BotRequestLog()
             {
-                Uid = ctx.Message.Author.Id,
-                Username = ctx.Message.Author.Username,
-                CommandType = "PREFERENCES",
-                FullCommand = $"!preference {key} {value}"
+                uid = (long)ctx.Message.Author.Id,
+                username = ctx.Message.Author.Username,
+                commandtype = "PREFERENCES",
+                fullcommand = $"!preference {key} {value}"
             });
             try
             {
-                Preferences preferences = Service.Instance.Preferences.Query(x => x.UserId == ctx.Message.Author.Id).FirstOrDefault();
+                var lookupId = (long)ctx.Message.Author.Id;
+                Preferences preferences = Service.Instance.Preferences.Query(x => x.userid == lookupId).FirstOrDefault();
                 if (preferences == null)
                 {
                     preferences = new Preferences();
-                    preferences.UserId = ctx.Message.Author.Id;
+                    preferences.userid = (long)ctx.Message.Author.Id;
                     Service.Instance.Preferences.Insert(preferences);
                 }
                 switch (key)
                 {
                     case "range":
-                        preferences.SearchRange = int.Parse(value);
+                        preferences.searchrange = int.Parse(value);
                         break;
                     case "limit":
-                        preferences.SearchLimit = int.Parse(value);
+                        preferences.searchlimit = int.Parse(value);
                         break;
                     default:
-                        break;
+                        await ctx.RespondAsync($"Your current preference is {preferences.searchlimit} messages within {preferences.searchrange} days.");
+                        return;
                 }
                 Service.Instance.Preferences.Update(preferences);
                 await ctx.RespondAsync("Preferences saved.");
@@ -185,15 +187,15 @@ namespace AndroGETracker
                 switch (type)
                 {
                     case MessageType.Sell:
-                        filter = $"Type IN ({(int)MessageType.Sell},{(int)MessageType.SellOrTrade},{(int)MessageType.BuyAndSell})";
+                        filter = $"Type IN ({(long)MessageType.Sell},{(long)MessageType.SellOrTrade},{(long)MessageType.BuyAndSell})";
                         broadType = "sell messages";
                         break;
                     case MessageType.Buy:
-                        filter = $"Type IN ({(int)MessageType.Buy},{(int)MessageType.BuyAndSell})";
+                        filter = $"Type IN ({(long)MessageType.Buy},{(long)MessageType.BuyAndSell})";
                         broadType = "buy messages";
                         break;
                     case MessageType.Trade:
-                        filter = $"Type IN ({(int)MessageType.Trade},{(int)MessageType.SellOrTrade})";
+                        filter = $"Type IN ({(long)MessageType.Trade},{(long)MessageType.SellOrTrade})";
                         broadType = "trade messages";
                         break;
                     default:
@@ -201,10 +203,11 @@ namespace AndroGETracker
                         broadType = "everything";
                         break;
                 }
-                var preference = Service.Instance.Preferences.Query(x => x.UserId == author.Id).FirstOrDefault();
+                var lookupId = (long)author.Id;
+                var preference = Service.Instance.Preferences.Query(x => x.userid == lookupId).FirstOrDefault();
                 var keywords = keyword.Split(',').Select(x => x.Trim()).ToArray();
-                var range = preference?.SearchRange ?? 1;
-                var limit = preference?.SearchLimit ?? 10;
+                var range = preference?.searchrange ?? 1;
+                var limit = preference?.searchlimit ?? 10;
                 var param = new List<RDapter.Entities.DatabaseParameter>();
                 var firstAppend = true;
                 for (var i = 0; i < keywords.Length; i++)
@@ -230,15 +233,16 @@ namespace AndroGETracker
                 }
                 var retry = 0;
                 List<Message> result;
+                var limitDate = DateTime.Today.AddDays(-range);
                 var query = $@"SELECT L.*
                                    FROM Message L
                                    INNER JOIN (
-                                   	SELECT Id,MAX(CreateDate) AS Latest
+                                   	SELECT id,max(createdate) AS Latest
                                    	FROM Message
                                    	WHERE {filter}
                                        {keywordsFilter}
-                                       AND CreateDate >= @date
-                                   	GROUP BY CreateBy
+                                       AND createdate >= '{limitDate.Year}-{limitDate.Month}-{limitDate.Day}'
+                                   	GROUP BY id,createby
                                    ) R
                                    ON L.CreateDate = R.Latest AND L.Id = R.Id
                                    ORDER BY CreateDate DESC 
@@ -248,7 +252,7 @@ namespace AndroGETracker
                     var copyParam = param.ConvertAll(x => x);
                     range += (retry * 30);
                     copyParam.Add(new RDapter.Entities.DatabaseParameter("date", DateTime.Today.AddDays(-range)));
-                    result = Service.Instance.Connector.ExecuteReader<Message>(new RDapter.Entities.ExecutionCommand(query, copyParam)).GroupBy(x => x.Content).Select(x => x.First()).AsList();
+                    result = Service.Instance.Connector.ExecuteReader<Message>(new RDapter.Entities.ExecutionCommand(query, copyParam)).GroupBy(x => x.content).Select(x => x.First()).AsList();
                 } while (result.Count == 0 && retry++ < 2);
                 if (retry == 1)
                 {
@@ -292,7 +296,7 @@ namespace AndroGETracker
                 foreach (var broad in result)
                 {
                     var prefixTime = string.Empty;
-                    var diff = now.Subtract(broad.CreateDate.Value);
+                    var diff = now.Subtract(broad.createdate.Value);
                     if (diff.Days > 0)
                     {
                         prefixTime = $"{diff.Days} days ago";
@@ -314,7 +318,7 @@ namespace AndroGETracker
                                                                          (await ctx.Client.GetOwnerAsync()).AvatarUrl,
                                                                          DiscordColorHelpers.GetRandomColor());
                     }
-                    embed.AddField($"{prefixTime} by {broad.CreateBy}", broad.Content);
+                    embed.AddField($"{prefixTime} by {broad.createby}", broad.content);
                 }
                 replyAction(embed);
             }

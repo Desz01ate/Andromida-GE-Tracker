@@ -13,14 +13,14 @@ namespace BroadCapture.Models
     //[Utilities.Attributes.SQL.Table("Message")]
     public partial class Message
     {
-        public int Id { get; set; }
-        public string Content { get; set; }
-        public int? Type { get; set; }
-        public DateTime? CreateDate { get; set; }
-        public string CreateBy { get; set; }
-        public bool IsSell { get; set; }
-        public bool IsBuy { get; set; }
-        public bool IsTrade { get; set; }
+        public long id { get; set; }
+        public string content { get; set; }
+        public int? type { get; set; }
+        public DateTime? createdate { get; set; }
+        public string createby { get; set; }
+        public bool issell { get; set; }
+        public bool isbuy { get; set; }
+        public bool istrade { get; set; }
     }
 }
 

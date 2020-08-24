@@ -14,8 +14,9 @@ namespace BroadCapture.Repositories
     {
         public Task<int> ManualInsertAsync(string currentMessage, int type, string CreateBy)
         {
+            this.TotalMessages += 1;
             var (isBuy, isSell, isTrade) = ValidateFlagType(type);
-            var sql = "INSERT INTO Message(Id,Content,Type,CreateDate,CreateBy,IsBuy,IsSell,IsTrade) VALUES(null,@content,@type,@createDate,@createBy,@isBuy,@isSell,@isTrade)";
+            var sql = "INSERT INTO Message(Content,Type,CreateDate,CreateBy,IsBuy,IsSell,IsTrade) VALUES(@content,@type,@createDate,@createBy,@isBuy,@isSell,@isTrade)";
             return this.Connector.ExecuteNonQueryAsync(sql, new
             {
                 content = currentMessage,

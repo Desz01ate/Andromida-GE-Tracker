@@ -8,14 +8,14 @@ namespace BroadCapture.Models
 {
     public class BotRequestLog
     {
-        public ulong Uid { get; set; }
-        public string Username { get; set; }
-        public string CommandType { get; set; }
-        public string FullCommand { get; set; }
-        public DateTime CreateDate { get; set; }
+        public long uid { get; set; }
+        public string username { get; set; }
+        public string commandtype { get; set; }
+        public string fullcommand { get; set; }
+        public DateTime createdate { get; set; }
         public BotRequestLog()
         {
-            CreateDate = DateTime.Now;
+            createdate = DateTime.Now;
         }
     }
 }
