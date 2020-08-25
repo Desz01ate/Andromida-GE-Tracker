@@ -12,7 +12,7 @@ namespace BroadCapture.Repositories
     public class ErrorLogRepository : Repository<ErrorLog>
     {
         private readonly Service service;
-        public ErrorLogRepository(Service service) : base(service.Connector)
+        public ErrorLogRepository(Service service) : base(service.OnlineConnector)
         {
             this.service = service;
         }

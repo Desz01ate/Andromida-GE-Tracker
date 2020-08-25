@@ -265,7 +265,7 @@ namespace AndroGETracker
                     var copyParam = param.ConvertAll(x => x);
                     range += (retry * 30);
                     copyParam.Add(new RDapter.Entities.DatabaseParameter("date", DateTime.Today.AddDays(-range)));
-                    result = Service.Instance.Connector.ExecuteReader<Message>(new RDapter.Entities.ExecutionCommand(query, copyParam)).GroupBy(x => x.content).Select(x => x.First()).AsList();
+                    result = Service.Instance.OnlineConnector.ExecuteReader<Message>(new RDapter.Entities.ExecutionCommand(query, copyParam)).GroupBy(x => x.content).Select(x => x.First()).AsList();
                 } while (result.Count == 0 && retry++ < 2);
                 if (retry == 1)
                 {
