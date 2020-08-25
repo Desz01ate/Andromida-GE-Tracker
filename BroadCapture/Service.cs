@@ -7,22 +7,25 @@ using BroadCapture.Models;
 using RDapter.Extends;
 using System.Linq;
 using Npgsql;
+using System.Data.SqlClient;
 
 namespace BroadCapture
 {
     public partial class Service : IDisposable
     {
-        internal protected readonly NpgsqlConnection Connector;
+        internal protected readonly NpgsqlConnection OnlineConnector;
+        internal protected readonly SQLiteConnection OfflineConnector;
         public static Service Instance { get; } = new Service();
-        public Service(string connectionString)
+        public Service(string offlineConnectionString,string onlineConnectionString)
         {
-            Connector = new NpgsqlConnection(connectionString);
+            OnlineConnector = new NpgsqlConnection(offlineConnectionString);
+            OfflineConnector = new SQLiteConnection(onlineConnectionString);
             ServiceCheckUp();
         }
         public Service()
         {
-            Connector = new NpgsqlConnection("Server=arjuna.db.elephantsql.com;Database=wxhsmfts;User ID=wxhsmfts;Password=sVdPIcZo15cGD3W48SoayAyFNxazjMFp;Port=5432;");
-            //Connector = new SQLiteConnection($@"Data Source={Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Local.db")};Version=3;");
+            OnlineConnector = new NpgsqlConnection("Server=arjuna.db.elephantsql.com;Database=wxhsmfts;User ID=wxhsmfts;Password=sVdPIcZo15cGD3W48SoayAyFNxazjMFp;Port=5432;");
+            OfflineConnector = new SQLiteConnection($@"Data Source={Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Local.db")};Version=3;");
             ServiceCheckUp();
         }
         private MessageRepository _Message { get; set; }
@@ -66,7 +69,7 @@ namespace BroadCapture
         {
             get
             {
-                return (_Preferences ?? new Repository<Preferences>(this.Connector));
+                return (_Preferences ?? new Repository<Preferences>(this.OnlineConnector));
             }
         }
         private Repository<BotRequestLog> _BotLog { get; set; }
@@ -74,12 +77,12 @@ namespace BroadCapture
         {
             get
             {
-                return (_BotLog ?? new Repository<BotRequestLog>(this.Connector));
+                return (_BotLog ?? new Repository<BotRequestLog>(this.OnlineConnector));
             }
         }
         public void Dispose()
         {
-            Connector?.Dispose();
+            OnlineConnector?.Dispose();
         }
     }
 }

@@ -144,7 +144,7 @@ namespace AndroGETracker
         private static async Task CheckReservation(string message, DiscordChannel channel, AndroGETrackerML.Model.Enum.MessageType messageType)
         {
             var guild = channel.Guild;
-            foreach (var reserve in Service.Instance.Reservation.ToList())
+            foreach (var reserve in Service.Instance.Reservation)
             {
                 if (reserve.expired)
                 {
