@@ -19,6 +19,7 @@ namespace BroadCapture
         public bool DisabledOtherMessage { get; set; }
         public ulong[] Blocklisting { get; set; }
         public int Interval { get; set; }
+        public string NpgsqlConnectionString { get; set; }
         static Config()
         {
             InitInstance();

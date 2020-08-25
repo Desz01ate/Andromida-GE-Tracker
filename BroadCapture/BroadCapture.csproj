@@ -239,6 +239,9 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="Utilities.Lite, Version=1.0.0.1, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Deszolate.Utilities.Lite.1.0.0.1-beta-001\lib\netstandard2.0\Utilities.Lite.dll</HintPath>
+    </Reference>
     <Reference Include="VAMemory">
       <HintPath>..\AndroGETracker\dependencies\VAMemory.dll</HintPath>
     </Reference>
@@ -285,10 +288,6 @@
     <Content Include="rsj_notescatter.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Utilities\Utilities.Lite\Utilities.Lite.csproj">
-      <Project>{ec6c4a42-0cba-45d8-a3e0-716d195f7c7f}</Project>
-      <Name>Utilities.Lite</Name>
-    </ProjectReference>
     <ProjectReference Include="..\AndroGETrackerML.Model\AndroGETrackerML.Model.csproj">
       <Project>{5B656D57-C9C6-4015-BBFA-2E8ED3DAFD22}</Project>
       <Name>AndroGETrackerML.Model</Name>

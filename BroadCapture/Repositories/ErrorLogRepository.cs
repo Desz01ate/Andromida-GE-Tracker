@@ -11,8 +11,8 @@ namespace BroadCapture.Repositories
 {
     public class ErrorLogRepository : Repository<ErrorLog>
     {
-        private readonly Service service;
-        public ErrorLogRepository(Service service) : base(service.Connector)
+        private readonly DatabaseContext service;
+        public ErrorLogRepository(DatabaseContext service) : base(service.OfflineConnection)
         {
             this.service = service;
         }

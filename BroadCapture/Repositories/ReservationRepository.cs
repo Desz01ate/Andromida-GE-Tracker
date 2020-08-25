@@ -12,8 +12,8 @@ namespace BroadCapture.Repositories
 {
     public class ReservationRepository : Repository<Reservation>
     {
-        private Service service;
-        public ReservationRepository(Service service) : base(service.Connector)
+        private DatabaseContext service;
+        public ReservationRepository(DatabaseContext service) : base(service.OfflineConnection)
         {
             this.service = service;
         }
@@ -21,7 +21,7 @@ namespace BroadCapture.Repositories
         {
             var param = keyword.ToLower();
             var query = $@"SELECT * FROM Reservation WHERE lower(Keyword) LIKE @keyword";
-            return service.Connector.ExecuteReader<Reservation>(query, new
+            return service.OnlineConnection.ExecuteReader<Reservation>(query, new
             {
                 keyword = $"%{param}%"
             });

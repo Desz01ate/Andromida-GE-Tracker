@@ -4,5 +4,6 @@
   "Interval": 50,
   "Maintenance": false,
   "DisabledOtherMessage": false,
-  "Blocklisting": []
+  "Blocklisting": [],
+  "NpgsqlConnectionString": ""
 }

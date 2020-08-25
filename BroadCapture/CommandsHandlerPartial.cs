@@ -38,11 +38,11 @@ namespace AndroGETracker
                                     GROUP BY CreateBy
                                     ORDER BY COUNT(*) DESC
                                     LIMIT 1";
-            var generalData = (await Service.Instance.Connector.ExecuteReaderAsync(generalQuery)).First();
-            var topBroader = (await Service.Instance.Connector.ExecuteReaderAsync(topBroaderQuery)).First();
+            var generalData = (await DatabaseContext.Instance.OnlineConnection.ExecuteReaderAsync(generalQuery)).First();
+            var topBroader = (await DatabaseContext.Instance.OnlineConnection.ExecuteReaderAsync(topBroaderQuery)).First();
             var responseEmbed = new DiscordEmbedBuilder()
             {
-                Title = $"Statistics for broad bot since {Service.Instance.Message.Min(x => x.createdate).Value.ToString("MMMM, dd yyyy")}",
+                Title = $"Statistics for broad bot since {DatabaseContext.Instance.Message.Min(x => x.createdate).Value.ToString("MMMM, dd yyyy")}",
             };
             responseEmbed.AddField("Total Messages : ", $"{Utilities.String.NumberFormat((int)generalData.TOTAL_MESSAGES, FormatSpecifier.General)} messages.");
             responseEmbed.AddField("Days since first introduce : ", $"{generalData.TOTAL_ACTIVE_DAY} days.");

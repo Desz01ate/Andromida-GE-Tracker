@@ -124,7 +124,7 @@ namespace BroadCapture
         private async Task CommandErrorHandler(CommandErrorEventArgs e)
         {
             Console.WriteLine(e.Exception.Message);
-            Service.Instance.ErrorLog.Insert(new ErrorLog(e.Exception.ToString()));
+            DatabaseContext.Instance.ErrorLog.Insert(new ErrorLog(e.Exception.ToString()));
         }
         public IEnumerable<DiscordChannel> GetDiscordChannels()
         {

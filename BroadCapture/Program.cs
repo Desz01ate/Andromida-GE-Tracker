@@ -67,7 +67,7 @@ namespace AndroGETracker
                         if (type == AndroGETrackerML.Model.Enum.MessageType.Other && Config.Instance.DisabledOtherMessage)
                             return;
                         var author = StringHelpers.ExtractCreateBy(broadMessage);
-                        await Service.Instance.Message.ManualInsertAsync(broadMessage, (int)type, author);
+                        await DatabaseContext.Instance.Message.ManualInsertAsync(broadMessage, (int)type, author);
                         embedMessage.Author = new DiscordEmbedBuilder.EmbedAuthor()
                         {
                             Name = $"{author} - {type.ToString()}"
@@ -81,12 +81,12 @@ namespace AndroGETracker
                             discordClientFactory.Client.SendMessageAsync(channel, embed: embedMessage);
                         }
                         shortLiveUidBuffer.Clear();
-                        activityObject.Name = $"Reading {Service.Instance.Message.Count():n0} messages now.";
+                        activityObject.Name = $"Reading {DatabaseContext.Instance.Message.Count():n0} messages now.";
                         await discordClientFactory.Client.UpdateStatusAsync(activityObject);
                     }
                     catch (Exception ex)
                     {
-                        Service.Instance.ErrorLog.Insert(new ErrorLog(ex.ToString()));
+                        DatabaseContext.Instance.ErrorLog.Insert(new ErrorLog(ex.ToString()));
                     }
                 };
                 runner.OnMaintenanceModeActivated += async () =>
@@ -98,7 +98,7 @@ namespace AndroGETracker
                     }
                     catch (Exception ex)
                     {
-                        Service.Instance.ErrorLog.Insert(new ErrorLog(ex.ToString()));
+                        DatabaseContext.Instance.ErrorLog.Insert(new ErrorLog(ex.ToString()));
 
                     }
                 };
@@ -108,7 +108,7 @@ namespace AndroGETracker
             catch (Exception ex)
             {
                 cancellationTokenSource.Cancel();
-                Service.Instance.ErrorLog.Insert(new ErrorLog(ex.ToString()));
+                DatabaseContext.Instance.ErrorLog.Insert(new ErrorLog(ex.ToString()));
                 Process.Start("BroadCapture.exe");
             }
         }
@@ -144,11 +144,11 @@ namespace AndroGETracker
         private static async Task CheckReservation(string message, DiscordChannel channel, AndroGETrackerML.Model.Enum.MessageType messageType)
         {
             var guild = channel.Guild;
-            foreach (var reserve in Service.Instance.Reservation.ToList())
+            foreach (var reserve in DatabaseContext.Instance.Reservation)
             {
                 if (reserve.expired)
                 {
-                    await Service.Instance.Reservation.DeleteAsync(reserve);
+                    await DatabaseContext.Instance.Reservation.DeleteAsync(reserve);
                     continue;
                 }
                 if (message.ToLower().Contains(reserve.keyword))

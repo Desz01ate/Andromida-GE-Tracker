@@ -11,6 +11,7 @@ using BroadCapture.Models;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
+using RDapter.Extends;
 
 namespace BroadCapture.Repositories
 {
@@ -20,8 +21,8 @@ namespace BroadCapture.Repositories
     public partial class MessageRepository : Repository<Message>
     {
         private int TotalMessages = -1;
-        private readonly Service Service;
-        public MessageRepository(Service service) : base(service.Connector)
+        private readonly DatabaseContext Service;
+        public MessageRepository(DatabaseContext service) : base(service.OnlineConnection)
         {
             this.Service = service;
             this.TotalMessages = this.Count();
@@ -29,21 +30,25 @@ namespace BroadCapture.Repositories
         public override void Insert(Message data)
         {
             TotalMessages += 1;
+            Service.OfflineConnection.Insert(data);
             base.Insert(data);
         }
         public override Task InsertAsync(Message data)
         {
             TotalMessages += 1;
+            Service.OfflineConnection.Insert(data);
             return base.InsertAsync(data);
         }
         public override void InsertMany(IEnumerable<Message> data)
         {
             TotalMessages += data.Count();
+            Service.OfflineConnection.InsertMany(data);
             base.InsertMany(data);
         }
         public override Task InsertManyAsync(IEnumerable<Message> data)
         {
             TotalMessages += data.Count();
+            Service.OfflineConnection.InsertMany(data);
             return base.InsertManyAsync(data);
         }
         public override int Count()
